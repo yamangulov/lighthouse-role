@@ -1,0 +1,45 @@
+---
+- name: Install epel-release repo
+  become: true
+  ansible.builtin.yum:
+    name: "epel-release"
+    state: latest
+- name: Install nginx & git
+  become: true
+  ansible.builtin.yum:
+    name:
+      - nginx
+      - git
+    state: latest
+- name: Start nginx
+  become: true
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+- name: Enable autostart nginx in systemd
+  become: true
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: yes
+- name: Create directory for lighthouse
+  become: true
+  ansible.builtin.file:
+    path: /var/www/lighthouse
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: "0755"
+- name: Clone lighthouse
+  become: true
+  ansible.builtin.command: git clone https://github.com/VKCOM/lighthouse.git /usr/share/nginx/lighthouse
+- name: Overwrite nginx config
+  become: true
+  ansible.builtin.template:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+    mode: 0644
+- name: Restart nginx
+  become: true
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
